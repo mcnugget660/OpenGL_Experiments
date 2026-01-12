@@ -1,0 +1,5 @@
+{
+  "terrain" : [{"name": "tree","radius": 10.0, "centerOffsetY" :  0.5}, {"name": "","radius": 10.0}],
+  "things" : [],
+  "stuff" : []
+}

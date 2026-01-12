@@ -1,0 +1,115 @@
+#version 440 core
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+struct Blade {
+    vec2 position;
+    float rotation;
+};
+
+layout (std430, binding = 0) buffer grassInstanceBuffer {
+    Blade blades[];
+};
+
+layout (std430, binding = 1) buffer grassInstanceBufferLOD {
+    Blade lowLODblades[];
+};
+
+layout (std430, binding = 2) buffer grassTileBuffer {
+    vec2 tiles[];
+};
+
+layout (std430, binding = 3) buffer grassCommandBuffer {
+    uint count;
+    uint instanceCount;
+    uint first;
+    uint baseInstance;
+    uint count2;
+    uint instanceCount2;
+    uint first2;
+    uint baseInstance2;
+};
+
+struct Plane {
+    vec3 normal;
+    float distance;
+};
+
+uniform sampler2D groundHeight;
+uniform float heightMapSize;
+
+uniform float scale;
+
+uniform Plane planes[6];
+
+uniform float bladeRadius = 0.11; // Radius of culling sphere around each grass blade
+
+uniform float maxBladeDistance = 50;
+
+uniform float lowLODDistance = 5;
+
+uniform vec3 cameraPos;
+
+uniform float inf = 1. / 0;
+
+bool isVisible(vec3 pos);
+
+vec2 rand(vec2 co) {
+    return vec2(
+        fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(cos(dot(co.yx, vec2(8.64947, 45.097))) * 43758.5453)
+    ) * 2.0 - 1.0;
+}
+
+float randf(vec2 co) {
+    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+
+void main() {
+    float subChunkRatio = 32 * scale;  // (Tile size / segment number)
+
+    vec2 relativePos = gl_LocalInvocationID.xy * scale + gl_WorkGroupID.xy * subChunkRatio;
+    vec2 pos = tiles[gl_WorkGroupID.z] + relativePos;
+
+    float height = float(texture(groundHeight, pos.yx / heightMapSize));
+
+    // Perhaps shift the circle's center to match the blade's rotation and tilt
+    vec3 realPos = vec3(pos.x, height + bladeRadius / 2, pos.y);
+
+    float dist = distance(cameraPos, realPos);
+
+    if (dist <= maxBladeDistance && isVisible(realPos) && height != inf) {
+        // Will halve blade density smoothly untill blade cut off
+        if(!((((gl_LocalInvocationID.x ^ gl_LocalInvocationID.y) & uint(1)) == 1) && (fract(sin(dot(relativePos.xy, vec2(12.9898, 78.233))) * 43758.5453) < smoothstep(0, 1, (dist - 2) / maxBladeDistance)))){
+        if (dist < lowLODDistance) {
+            uint bladeCount = atomicAdd(instanceCount, 1); // Returns the value before incrementation
+
+            blades[bladeCount].position = pos + rand(pos) * 0.05;
+            blades[bladeCount].rotation = randf(pos) * 6.3;
+        } else {
+            uint bladeCount = atomicAdd(instanceCount2, 1); // Returns the value before incrementation
+
+            lowLODblades[bladeCount].position = pos + rand(pos) * 0.05;
+            lowLODblades[bladeCount].rotation = randf(pos) * 6.3;
+        }
+    }
+    }
+}
+
+bool outsidePlane(vec3 center, Plane plane) {
+
+    float centerOffset = dot(center, plane.normal) - plane.distance;
+
+    // If the center at most range less than the plane along its normal the box intersects the plane
+    return centerOffset + bladeRadius < 0;
+}
+
+bool isVisible(vec3 pos) {
+    // loop through all planes
+    for (int i = 0; i < 6; i++) {
+        if (outsidePlane(pos, planes[i]))
+        return false;
+    }
+    return true;
+}

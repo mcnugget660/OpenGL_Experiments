@@ -1,0 +1,24 @@
+{
+  "name" : "Ball",
+  "hasPos" : true,
+  "hasMovement" : true,
+  "Attributes" :
+  [
+    {
+      "type" : "Bounds",
+      "radius" : 0.5
+    },
+    {
+      "type" : "Render",
+      "mode": "sdf",
+      "shape" : 0
+    }
+  ],
+  "RandomAttributes" : [
+    {
+      "type" : "Explosion",
+      "time" : 10
+    }
+  ]
+
+}

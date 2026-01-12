@@ -1,0 +1,9 @@
+#1 View Matrix bullshit
+many errors can be avoided by copying the matrix instead of a temporary one from .getCameraMatrix()
+
+always check matrices for nans
+
+occlusion needs to be re-enabled
+terrain tesselation is distorted
+
+INCLUDE files are not being drawn from libraries folder but rather the system usr/

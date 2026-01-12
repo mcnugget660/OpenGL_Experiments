@@ -1,0 +1,35 @@
+#version 430 core
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct ModelInstanceData{
+    uint count;
+    uint offset;
+};
+
+layout (std430, binding = 0) buffer ModelInstanceDataBuffer {
+    ModelInstanceData modelInstanceData[];
+};
+
+layout (std430, binding = 1) buffer MeshToModel {
+    uint meshData[];
+};
+
+struct DrawElementsIndirectCommand{
+    uint  count;
+    uint  instanceCount;
+    uint  firstIndex;
+    int  baseVertex;
+    uint  baseInstance;
+};
+
+layout (std430, binding = 2) buffer MeshIndirectCommands {
+    DrawElementsIndirectCommand commands[];
+};
+
+
+void main() {
+    uint model = meshData[gl_WorkGroupID.z];
+    commands[gl_WorkGroupID.z].instanceCount = modelInstanceData[model].count;
+    commands[gl_WorkGroupID.z].baseInstance = modelInstanceData[model].offset;
+}

@@ -1,0 +1,5 @@
+{
+  "compute" : ["cull", "grass", "occlusion", "setMeshCounts"],
+  "basic" : ["basic", "Grass", "MassModelShader", "ModelShader", "occlude", "GUI/text", "3d"],
+  "geometry" : ["Terrain", "normals"]
+}
