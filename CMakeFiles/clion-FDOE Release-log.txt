@@ -1,4 +1,0 @@
-Cannot generate into /home/conrad/c++Projects/Final Day On Earth
-This directory is already used for 'FDOE' profile
-
-Please either delete it manually or select another generation directory
